@@ -1,0 +1,201 @@
+//matrix1.h:
+#pragma once
+using namespace std;
+
+void allocateAndInitializeMatrix1(double*& matrix, int n);
+void deallocateMatrix1(double*& matrix);
+void inputMatrix1(double* matrix, int n);
+void multiplyMatrices1(const double* A, const double* B, double* D, int n);
+void addMatrices1(const double* B, const double* C, double* BC, int n);
+
+
+//matrix2.h:
+#pragma once
+using namespace std;
+void allocateAndInitializeMatrix2(double**& matrix, int n);
+void deallocateMatrix2(double**& matrix, int n);
+void inputMatrix2(double** matrix, int n);
+void multiplyMatrices2(double** A, double** B, double** D, int n);
+void addMatrices2(double** B, double** C, double** BC, int n);
+//cpp1:
+#include "matrix1.h"
+#include <iostream>
+
+void allocateAndInitializeMatrix1(double*& matrix, int n) {
+    matrix = new double[n * n];
+}
+
+void deallocateMatrix1(double*& matrix) {
+    delete[] matrix;
+    matrix = nullptr;
+}
+
+void inputMatrix1(double* matrix, int n) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            cout << "Element [" << i << "][" << j << "]: ";
+            cin >> matrix[i * n + j];
+        }
+    }
+}
+
+void multiplyMatrices1(const double* A, const double* B, double* D, int n) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            D[i * n + j] = 0;
+            for (int k = 0; k < n; ++k) {
+                D[i * n + j] += A[i * n + k] * B[k * n + j];
+            }
+        }
+    }
+}
+
+void addMatrices1(const double* B, const double* C, double* BC, int n) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            BC[i * n + j] = B[i * n + j] + C[i * n + j];
+        }
+    }
+}
+//cpp2:
+#include "matrix2.h"
+#include <iostream>
+
+void allocateAndInitializeMatrix2(double**& matrix, int n) {
+    matrix = new double* [n];
+    for (int i = 0; i < n; ++i) {
+        matrix[i] = new double[n];
+    }
+}
+
+void deallocateMatrix2(double**& matrix, int n) {
+    for (int i = 0; i < n; ++i) {
+        delete[] matrix[i];
+    }
+    delete[] matrix;
+    matrix = nullptr;
+}
+
+void inputMatrix2(double** matrix, int n) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            cout << "Element [" << i << "][" << j << "]: ";
+            cin >> matrix[i][j];
+        }
+    }
+}
+
+void multiplyMatrices2(double** A, double** B, double** D, int n) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            D[i][j] = 0;
+            for (int k = 0; k < n; ++k) {
+                D[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+}
+
+void addMatrices2(double** B, double** C, double** BC, int n) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            BC[i][j] = B[i][j] + C[i][j];
+        }
+    }
+}
+//main cpp:
+#include <iostream>
+#include "matrix1.h"
+#include "matrix2.h"
+
+void runFirstMethod() {
+    int n;
+    cout << "Enter the order of the matrices (n): ";
+    cin >> n;
+
+    double* A, * B, * C, * D, * BC;
+    allocateAndInitializeMatrix1(A, n);
+    allocateAndInitializeMatrix1(B, n);
+    allocateAndInitializeMatrix1(C, n);
+    allocateAndInitializeMatrix1(D, n);
+    allocateAndInitializeMatrix1(BC, n);
+
+    cout << "Enter matrix A:" << endl;
+    inputMatrix1(A, n);
+    cout << "Enter matrix B:" << endl;
+    inputMatrix1(B, n);
+    cout << "Enter matrix C:" << endl;
+    inputMatrix1(C, n);
+
+    addMatrices1(B, C, BC, n);
+    multiplyMatrices1(A, BC, D, n);
+
+    cout << "Matrix D (A * (B + C)):" << endl;
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            cout << D[i * n + j] << " ";
+        }
+        cout << endl;
+    }
+
+    deallocateMatrix1(A);
+    deallocateMatrix1(B);
+    deallocateMatrix1(C);
+    deallocateMatrix1(D);
+    deallocateMatrix1(BC);
+}
+
+void runSecondMethod() {
+    int n;
+    cout << "Enter the order of the matrices (n): ";
+    cin >> n;
+
+    double** A, ** B, ** C, ** D, ** BC;
+    allocateAndInitializeMatrix2(A, n);
+    allocateAndInitializeMatrix2(B, n);
+    allocateAndInitializeMatrix2(C, n);
+    allocateAndInitializeMatrix2(D, n);
+    allocateAndInitializeMatrix2(BC, n);
+
+    cout << "Enter matrix A:" << std::endl;
+    inputMatrix2(A, n);
+    cout << "Enter matrix B:" << std::endl;
+    inputMatrix2(B, n);
+    cout << "Enter matrix C:" << std::endl;
+    inputMatrix2(C, n);
+
+    addMatrices2(B, C, BC, n);
+    multiplyMatrices2(A, BC, D, n);
+
+    cout << "Matrix D (A * (B + C)):" << endl;
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            cout << D[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    deallocateMatrix2(A, n);
+    deallocateMatrix2(B, n);
+    deallocateMatrix2(C, n);
+    deallocateMatrix2(D, n);
+    deallocateMatrix2(BC, n);
+}
+
+int main() {
+    int choice;
+    cout << "Choose method: \n1. one-dimensional array\n2. Pointer to array\n";
+    cin >> choice;
+
+    if (choice == 1) {
+        runFirstMethod();
+    }
+    else if (choice == 2) {
+        runSecondMethod();
+    }
+    else {
+        cout << "Invalid choice!" << endl;
+    }
+
+    return 0;
+}
