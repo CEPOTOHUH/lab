@@ -1,0 +1,72 @@
+//matrix.h:
+#pragma once
+#include <iostream>
+using namespace std;
+const int MAX_SIZE = 100;
+void InputArray(int& n, int* elements);
+void fillMatrix(int* matrix, int n, int elements[MAX_SIZE * MAX_SIZE]);
+void printMatrix(int* matrix, int n);
+//cpp:
+#include "matrix.h"
+void InputArray(int& n, int* elements) {
+    cout << "Введите размер матрицы (n): ";
+    cin >> n;
+    cout << "Введите элементы для матрицы:" << endl;
+    for (int i = 0; i < n * n; ++i) {
+        cin >> elements[i];
+    }
+}
+void fillMatrix(int* matrix, int n, int elements[MAX_SIZE * MAX_SIZE]) {
+    int high = 0, down = n - 1;
+    int left = 0, right = n - 1;
+    int index = 0;
+
+    while (high <= down && left <= right) {
+        for (int i = right; i >= left; --i) {
+            *(matrix + down * n + i) = elements[index++];
+        }
+        --down;
+
+        for (int i =down; i >= high; --i) {
+            *(matrix + i * n + left) = elements[index++];
+        }
+        ++left;
+
+        for (int i = left; i <= right; ++i) {
+            *(matrix + high * n + i) = elements[index++];
+        }
+        ++high;
+
+        for (int i = high; i <= down; ++i) {
+            *(matrix + i * n + right) = elements[index++];
+        }
+        --right;
+    }
+}
+void printMatrix(int* matrix, int n) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            cout << *(matrix + i * n + j) << " ";
+        }
+        cout << endl;
+    }
+}
+//main cpp:
+#include "matrix.h"
+using namespace std;
+
+int main() {
+    setlocale(LC_ALL, "ru");
+    int n;
+    int elements[MAX_SIZE * MAX_SIZE];
+    int matrix[MAX_SIZE][MAX_SIZE];
+    InputArray(n, elements);
+    
+    fillMatrix(&matrix[0][0], n, elements);
+
+    cout << "Матрица по спирали:" << endl;
+
+    printMatrix(&matrix[0][0], n);
+
+    return 0;
+}
