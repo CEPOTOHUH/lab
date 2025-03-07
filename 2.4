@@ -1,0 +1,114 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime> 
+
+using namespace std;
+
+struct Node {
+    char data;
+    Node* next;
+    Node(char c) : data(c), next(nullptr) {}
+};
+
+void append(Node*& head, char c) {
+    Node* newNode = new Node(c);
+    if (!head) {
+        head = newNode;
+    }
+    else {
+        Node* temp = head;
+        while (temp->next) {
+            temp = temp->next;
+        }
+        temp->next = newNode;
+    }
+}
+
+void printList(Node* head) {
+    while (head) {
+        cout << head->data << " ";
+        head = head->next;
+    }
+    cout << endl;
+}
+
+void freeList(Node*& head) {
+    while (head) {
+        Node* temp = head;
+        head = head->next;
+        delete temp;
+    }
+}
+
+Node* createList(Node* L1) {
+    int check[256] = { 0 };
+
+    for (Node* temp = L1; temp; temp = temp->next)
+        check[(unsigned char)temp->data]++;
+
+
+    Node* L2 = nullptr;
+    for (Node* temp = L1; temp; temp = temp->next)
+        if (check[(unsigned char)temp->data] >= 2) {
+            append(L2, temp->data);
+        }
+    return L2;
+}
+
+
+void fillList(Node*& head) {
+    int choice;
+    cout << "Выберите способ заполнения списка:\n"
+        << "1 - Ввести вручную\n"
+        << "2 - Сгенерировать случайно\n"
+        << "Ваш выбор: ";
+    cin >> choice;
+
+    if (choice == 1) {
+        int count = 0;
+        cout << "Введите количество символов: ";
+        cin >> count;
+        cout << "Введите символы\n";
+        char input;
+        while (count > 0) {
+            count--;
+            cin >> input;
+            append(head, input);
+        }
+    }
+    else if (choice == 2) {
+        int size;
+        cout << "Введите размер списка: ";
+        cin >> size;
+        srand(time(0));
+        for (int i = 0; i < size; i++) {
+            append(head, 'a' + rand() % 26);
+        }
+    }
+    else {
+        cout << "Ошибка ввода.\n";
+    }
+}
+
+
+int main() {
+
+    setlocale(LC_ALL, "RUS");
+    Node* L1 = nullptr;
+
+    fillList(L1);
+
+    cout << "L1: ";
+    printList(L1);
+
+    Node* L2 = createList(L1);
+    cout << "L2 (повторяются больше 1 раза): ";
+    printList(L2);
+
+    freeList(L1);
+    freeList(L2);
+
+    printList(L1);
+    printList(L2);
+    return 0;
+}
