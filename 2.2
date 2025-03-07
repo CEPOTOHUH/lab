@@ -1,0 +1,67 @@
+#include <iostream>
+#include <random>
+using namespace std;
+const int MAX_VALUE = 10000000;
+
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+
+    bool* seen = new bool[MAX_VALUE + 1] {false};
+
+    int mode;
+    cout << "Выберите режим: (1 - ручной ввод, 2 - случайная генерация): ";
+    cin >> mode;
+    if (mode == 1) {
+         int count;
+         cout << "Введите количество чисел: ";
+         cin >> count;
+
+         cout << "Введите последовательность чисел:\n";
+         int num;
+         for (int i = 0; i < count; ++i) {
+             cin >> num;
+             if (num > 0 && num <= MAX_VALUE) {
+                 seen[num] = true;
+             }
+             else {
+                 cout << "Число " << num << " выходит за пределы допустимых значений.\n";
+             }
+         }
+ 
+    }
+    else if (mode == 2) {
+        long long n;
+        cout << "Введите количество чисел (до 10^12): ";
+        cin >> n;
+
+        if (n > 1e12) {
+            cout << "Ошибка: слишком большое количество чисел!\n";
+            delete[] seen;
+            return 1;
+        }
+
+        random_device rd; //рандомный сид
+        mt19937 gen(rd());  // сам генератор случайных чисел
+        uniform_int_distribution<int> dist(1, MAX_VALUE); // распределение
+
+        cout << "Генерация случайной последовательности...\n";
+
+        for (long long i = 0; i < n; i++) {
+            int num = dist(gen);
+           // int num = 10000000;
+            seen[num] = true;
+        }
+    }
+     
+    cout << "Отсортированная последовательность без повторений:\n";
+    for (int i = MAX_VALUE; i >= 1; i--) {
+        if (seen[i]) {
+            cout << i << " ";
+        }
+    }
+
+    delete[] seen;
+
+    return 0;
+}
