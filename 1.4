@@ -1,0 +1,66 @@
+//solver.h:
+#pragma once
+#include <iostream>
+#include <iomanip>
+#include <cmath>
+using namespace std;
+double bisection(double a, double b, int& iterations, double (*f)(double, double), double s, double eps);
+double f1(double x, double);
+double f2(double x, double s);
+//cpp:
+#include "solver.h"
+
+double bisection(double a, double b, int& iterations, double (*f)(double, double), double s, double eps) {
+    double mid;
+    iterations = 0;
+    while ((a-b) < eps||f(mid,s)<eps) {
+        mid = (a + b) / 2.0;
+        double f_mid = f(mid, s);
+        if (fabs(f_mid) < eps) {
+            return mid;
+        }
+        else if (f(a, s) * f_mid < 0) {
+            b = mid;
+        }
+        else {
+            a = mid;
+        }
+        iterations++;
+    }
+    return (a + b) / 2.0;
+}
+
+double f1(double x, double) {
+    return x * x * x - 3;
+}
+
+double f2(double x, double s) {
+    return pow(x, 1.0 / s) - 2 * pow(cos(3.141572 * x / 2), 2);
+}
+//main cpp:
+#include "solver.h"
+int main() {
+    double eps = 1e-6;
+    double a1 = 1.0, b1 = 4.0;
+    int iterations = 0;
+
+    cout << "  +------+----------+-----------------+--------+" << endl;
+    cout << "  |  s   |    x     |   f(x)          | k_iter |" << endl;
+    cout << "  +------+----------+-----------------+--------+" << endl;
+
+    // Вызов метода половинного деления для первой функции
+    double root1 = bisection(a1, b1, iterations, f1, 0, eps);
+    cout << "a)| ---- | " << setw(8) << root1 << " | " << setw(15) << f1(root1, 0) << " | " << setw(6) << iterations << " |" << endl;
+    cout << "  +------+----------+-----------------+--------+" << endl;
+
+    // Вызов метода половинного деления для второй функции с различными значениями s
+    double a2 = 0.0, b2 = 1.5;
+    double s_values[] = { 0.5, 1.0, 1.5, 2.0 };
+    for (double s : s_values) {
+        double root2 = bisection(a2, b2, iterations, f2, s, eps);
+        cout << "b)| " << setw(4) << s << " | " << setw(8) << root2 << " | " << setw(15) << f2(root2, s) << " | " << setw(6) << iterations << " |" << endl;
+    }
+
+    cout << "  +------+----------+-----------------+--------+" << endl;
+    return 0;
+}
