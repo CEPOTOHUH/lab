@@ -1,0 +1,181 @@
+student.h:
+#pragma once
+#include <ctime>
+#include <cstdlib>
+#include <iostream>
+using namespace std;
+const int NAME_SIZE = 50;
+const int DATE_SIZE = 11;
+
+struct Student {
+    char fullName[NAME_SIZE], birthDate[DATE_SIZE];
+    int course;
+    double gpa;
+    Student* next;
+};
+void copyString(char* dest, const char* src);
+int compareStrings(const char* s1, const char* s2);
+void insertStudent(Student*& head, const char* name, const char* birth, int course, double gpa);
+void generateRandomStudent(Student*& head);
+void inputStudent(Student*& head);
+void printStudents(Student* head);
+void removeOldestPerCourse(Student*& head, Student*& removedHead);
+void deleteList(Student*& head);
+cpp:
+#include "student.h"
+
+const char* firstNames[] = { "Иван", "Петр", "Алексей", "Сергей", "Дмитрий" };
+const char* lastNames[] = { "Иванов", "Петров", "Сидоров", "Кузнецов", "Смирнов" };
+const char* birthDates[] = { "12.05.2000", "25.08.2001", "10.11.2002", "03.02.2003", "15.07.2004" };
+
+// Копирование строки
+void copyString(char* dest, const char* src) {
+    while (*src != '\0') {
+        *dest = *src;
+        dest++;
+        src++;
+    }
+    *dest = '\0';
+}
+
+// Сравнение строк
+int compareStrings(const char* s1, const char* s2) {
+    while (*s1 != '\0' && *s2 != '\0') {
+        if (*s1 != *s2) {
+            return (unsigned char)(*s1) - (unsigned char)(*s2);
+        }
+        s1++;
+        s2++;
+    }
+    return (unsigned char)(*s1) - (unsigned char)(*s2);
+}
+
+// Вставка студента в упорядоченный список
+void insertStudent(Student*& head, const char* name, const char* birth, int course, double gpa) {
+    Student* s = new Student;
+    copyString(s->fullName, name);
+    copyString(s->birthDate, birth);
+    s->course = course;
+    s->gpa = gpa;
+    s->next = nullptr;
+
+    if (!head || compareStrings(s->fullName, head->fullName) < 0) {
+        s->next = head;
+        head = s;
+        return;
+    }
+
+    Student* cur = head;
+    while (cur->next && compareStrings(s->fullName, cur->next->fullName) > 0) {
+        cur = cur->next;
+    }
+    s->next = cur->next;
+    cur->next = s;
+}
+
+// Генерация случайного студента
+void generateRandomStudent(Student*& head) {
+    char name[NAME_SIZE], birth[DATE_SIZE];
+    snprintf(name, NAME_SIZE, "%s %s", lastNames[rand() % 5], firstNames[rand() % 5]);
+    copyString(birth, birthDates[rand() % 5]);
+    insertStudent(head, name, birth, 1 + rand() % 6, 2.0 + (rand() % 80) / 10.0);
+}
+
+// Ввод студента вручную
+void inputStudent(Student*& head) {
+    char name[NAME_SIZE], birth[DATE_SIZE];
+    int course;
+    double gpa;
+
+    cout << "ФИО: ";
+    cin.ignore();
+    cin.getline(name, NAME_SIZE);
+    cout << "Дата рождения (DD.MM.YYYY): ";
+    cin >> birth;
+    cout << "Курс (1-6): ";
+    cin >> course;
+    cout << "Успеваемость (2.0-10.0): ";
+    cin >> gpa;
+
+    insertStudent(head, name, birth, course, gpa);
+}
+
+// Вывод списка студентов
+void printStudents(Student* head) {
+    while (head) {
+        cout << "ФИО: " << head->fullName << ", Дата рождения: " << head->birthDate << ", Курс: " << head->course << ", Успеваемость: " << head->gpa << std::endl;
+        head = head->next;
+    }
+}
+
+// Удаление самого старшего студента на каждом курсе
+void removeOldestPerCourse(Student*& head, Student*& removedHead) {
+    for (int course = 1; course <= 6; ++course) {
+        Student* cur = head, * prev = nullptr, * oldest = nullptr, * oldestPrev = nullptr;
+        while (cur) {
+            if (cur->course == course && (!oldest || compareStrings(cur->birthDate, oldest->birthDate) < 0)) {
+                oldest = cur;
+                oldestPrev = prev;
+            }
+            prev = cur;
+            cur = cur->next;
+        }
+        if (oldest) {
+            std::cout << "Удаляемый старший студент: " << oldest->fullName << ", Курс: " << oldest->course << ", Дата рождения: " << oldest->birthDate << std::endl;
+            if (oldestPrev) {
+                oldestPrev->next = oldest->next;
+            }
+            else {
+                head = oldest->next;
+            }
+            oldest->next = removedHead;
+            removedHead = oldest;
+        }
+    }
+}
+
+// Удаление списка
+void deleteList(Student*& head) {
+    while (head) {
+        Student* temp = head;
+        head = head->next;
+        delete temp;
+    }
+}
+cpp main:
+#include "student.h"
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+    srand(time(0));
+
+    Student* students = nullptr;
+    Student* removedStudents = nullptr;
+    int choice, count;
+
+    cout << "1 - Ввод вручную\n2 - Случайные данные\nВаш выбор: ";
+    cin >> choice;
+    cout << "Сколько студентов добавить? ";
+    cin >> count;
+
+    for (int i = 0; i < count; i++) {
+        (choice == 1) ? inputStudent(students) : generateRandomStudent(students);
+    }
+
+    cout << "\nИсходный список студентов:\n";
+    printStudents(students);
+
+    cout << "\nСамые старшие студенты по курсам:\n";
+    removeOldestPerCourse(students, removedStudents);
+
+    cout << "\nСписок после удаления самых старших:\n";
+    printStudents(students);
+
+    cout << "\nСписок старших на каждом курсе студентов:\n";
+    printStudents(removedStudents);
+
+    deleteList(students);
+    deleteList(removedStudents);
+
+    return 0;
+}
