@@ -1,0 +1,77 @@
+//integral.h:
+#pragma once
+#include <cmath>
+#include <iostream>
+#include <iomanip>
+using namespace std;
+double Sum(double a, double b, double hight, double (*fun) (double, double, double), double s, double t);
+double calc_integral(double a, double b, double eps, double (*fun) (double, double, double), double integral, short& counter, double s, double t);
+double function(double x, double s, double t);
+//cpp:
+#include "integral.h"
+double Sum(double a, double b, double hight, double (*fun) (double, double, double), double s, double t)
+{
+    double x, sum;
+    x = a;
+    sum = 0;
+
+    while (x < b) {
+        sum += fun(x, s, t);
+        x = x + hight;
+    }
+
+    return hight * sum;
+}
+
+double calc_integral(double a, double b, double eps, double (*fun) (double, double, double), double integral, short& counter, double s, double t)
+{
+    int n = 10;
+    double hight = (b - a) / n;
+    double square_1 = 0, square_2 = 0;
+
+    square_1 = Sum(a, b, hight, fun, s, t);
+    counter = 0;
+    do
+    {
+        square_2 = square_1;
+        n *= 2;
+        hight = (b - a) / n;
+        square_1 = Sum(a, b, hight, fun, s, t);
+        counter += 1;
+    } while (fabs(square_1 - square_2) > eps);
+
+    return square_1;
+}
+
+double function(double x, double s, double t)
+{
+    return pow(t + pow(x, 3), 1.0 / s);
+}
+/main cpp:
+#include "integral.h"
+int main()
+{
+    const double eps = 1e-6;
+    double  a, b, s1, s2, ds, t1, t2, dt, integral = 0;
+    short counter = 0;
+
+    cout << "Input a, b, s1, s2, ds, t1, t2, dt\n";
+    cin >> a >> b >> s1 >> s2 >> ds >> t1 >> t2 >> dt;
+
+    cout << setw(10) << "s"
+        << setw(10) << "t"
+        << setw(10) << "integral"
+        << setw(10) << "k_iter" << endl;
+
+    for (auto index_1 = s1; index_1 <= s2; index_1 += ds) {
+        for (auto index_2 = t1; index_2 <= t2; index_2 += dt) {
+            cout << setw(10) << index_1
+                << setw(10) << index_2
+                << setw(10) << calc_integral(a, b, eps, &function, integral, counter, index_1, index_2)
+                << setw(10) << counter << endl;
+            counter = 0;
+        }
+        cout << endl << "_______________________________________________" << endl;
+    }
+    return 0;
+}
