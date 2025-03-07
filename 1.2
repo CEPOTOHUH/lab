@@ -1,0 +1,144 @@
+//utils.h:
+#pragma once
+#include <iostream>
+using namespace std;
+const int MAX_WORDS = 100;
+const int MAX_LENGTH = 50;
+
+void create_word_array(const char* text, char words[MAX_WORDS][MAX_LENGTH], int& word_count);
+bool are_anagrams(const char* word1, const char* word2);
+bool have_same_characters(const char* word1, const char* word2);
+void get_result_string(char words[MAX_WORDS][MAX_LENGTH], int word_count, char* result);
+void my_strcat(char* dest, const char* src);
+//cpp:
+#include "utils.h"
+const char delimiters[] = { ' ', '\n', '.', ',', ':', ';', '!', '?', '-', '(', ')' };
+void create_word_array(const char* text, char words[MAX_WORDS][MAX_LENGTH], int& word_count) {
+    int i = 0, j = 0;
+    word_count = 0;
+
+    0;
+
+    while (text[i] != '\0') {
+        bool is_delimiter = false;
+        for (char delimiter : delimiters) {
+            if (text[i] == delimiter) {
+                is_delimiter = true;
+                break;
+            }
+        }
+
+        if (is_delimiter) {
+            if (j > 0) {
+                words[word_count][j] = '\0';
+                word_count++;
+                j = 0;
+            }
+        }
+        else {
+            words[word_count][j] = text[i];
+            j++;
+        }
+        i++;
+    }
+
+    if (j > 0) {
+        words[word_count][j] = '\0';
+        word_count++;
+    }
+}
+
+bool are_anagrams(const char* word1, const char* word2) {
+    int count1[256] = { 0 };
+    int count2[256] = { 0 };
+
+    for (int i = 0; word1[i] != '\0'; i++) {
+        count1[static_cast<unsigned char>(word1[i])]++;
+    }
+
+    for (int i = 0; word2[i] != '\0'; i++) {
+        count2[static_cast<unsigned char>(word2[i])]++;
+    }
+
+    for (int i = 0; i < 256; i++) {
+        if (count1[i] != count2[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+bool have_same_characters(const char* word1, const char* word2) {
+    int count1[256] = { 0 };
+    int count2[256] = { 0 };
+
+    for (int i = 0; word1[i] != '\0'; i++) {
+        count1[static_cast<unsigned char>(word1[i])]++;
+    }
+
+    for (int i = 0; word2[i] != '\0'; i++) {
+        count2[static_cast<unsigned char>(word2[i])]++;
+    }
+
+    for (int i = 0; i < 256; i++) {
+        if (count1[i] > 0 && count2[i] > 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void my_strcat(char* dest, const char* src) {
+    while (*dest) {
+        dest++;
+    }
+    while (*src) {
+        *dest = *src;
+        dest++;
+        src++;
+    }
+    *dest = '\0';
+}
+
+void get_result_string(char words[MAX_WORDS][MAX_LENGTH], int word_count, char* result) {
+    result[0] = '\0';
+    bool used[MAX_WORDS] = { 0 };
+
+    for (int i = 0; i < word_count; i++) {
+
+        for (int j = i + 1; j < word_count; j++) {
+            if (are_anagrams(words[i], words[j])&& have_same_characters(words[i], words[j])) {
+                if (!used[i]) {
+                    my_strcat(result, words[i]);
+                    my_strcat(result, " ");
+                    used[i] = true;
+                }
+                my_strcat(result, words[j]);
+                my_strcat(result, " ");
+                used[j] = true;
+            }
+        }
+    }
+}
+//main cpp:
+#include "utils.h"
+
+int main() {
+    setlocale(LC_ALL , "ru");
+    const int MAX_INPUT = 500;
+    char text[MAX_INPUT];
+    cout << "Введите текст: ";
+    cin.getline(text, MAX_INPUT);
+
+    char words[MAX_WORDS][MAX_LENGTH];
+    int word_count;
+    create_word_array(text, words, word_count);
+
+    char result[MAX_INPUT];
+    get_result_string(words, word_count, result);
+
+    cout << "Результирующая строка: " << result << endl;
+
+    return 0;
+}
