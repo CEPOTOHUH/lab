@@ -54,24 +54,37 @@ double List::calculateSum() {
     Node* right = tail; // Указатель на конец списка
     double product = 1; // Инициализируем произведение единицей
 
-    // Проходим по списку, пока левый и правый указатели не встретятся
+    // Проходим по списку, пока левый указатель не дойдет до конца
     while (left != right && left->prev != right) {
+        cout << "(" << left->value << " + " << right->value << ")"; // Вывод текущей пары
         product *= (left->value + right->value); // Умножаем на сумму пары
+
         left = left->next;  // Перемещаем левый указатель вперед
         right = right->prev; // Перемещаем правый указатель назад
     }
 
-    // Если количество элементов нечетное, добавляем средний элемент
+    // Если количество элементов нечетное, учитываем средний элемент один раз
     if (left == right) {
-        product *= left->value;
+        cout << "(" << left->value << ")"; // Вывод среднего элемента
+        product *= left->value; // Умножаем на средний элемент
     }
 
-    // Добавляем последнюю пару (x_n + x_1)
-    product *= (head->value + tail->value);
+    // Продолжаем цикл в обратном порядке
+    while (left != head || right != tail) {
+        if (left != head) {
+            left = left->prev; // Перемещаем левый указатель назад
+        }
+        if (right != tail) {
+            right = right->next; // Перемещаем правый указатель вперед
+        }
 
-    return product;
+        cout << "(" << left->value << " + " << right->value << ")"; // Вывод текущей пары
+        product *= (left->value + right->value); // Умножаем на сумму пары
+    }
+
+    cout << " = " << product << endl; // Вывод итогового результата
+    return product; // Возвращаем итоговое произведение
 }
-
 void List::clear() {
     Node* temp;
     while (head) {
@@ -82,6 +95,11 @@ void List::clear() {
     tail = nullptr;
 }
 cpp main:
+#include "list.h"
+#include <iostream>
+
+using namespace std;
+
 #include "list.h"
 #include <iostream>
 
