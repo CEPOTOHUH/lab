@@ -1,0 +1,346 @@
+list.h:
+#pragma once
+
+#include <iostream>
+using namespace std;
+class List {
+private:
+    char* A;
+    int* B;
+    int nz; // Индекс начала списка
+    int ns; // Индекс начала свободных компонент
+    int capacity; // Емкость массивов
+
+    void resize();
+
+public:
+    List();
+    ~List();
+
+    void createList(char value);
+    void append(char value);
+    int* findElement(char value, int& count);
+    void insertAtIndex(int index, char value);
+    void deleteByIndex(int index);
+    int countElements();
+    void printList();
+    void fillRandom(int size);
+    void createUniqueList();
+};
+
+cpp:
+#include "list.h"
+#include <cstdlib>
+#include <ctime>
+
+List::List() : A(nullptr), B(nullptr), nz(-1), ns(0), capacity(0) {}
+
+List::~List() {
+    delete[] A;
+    delete[] B;
+}
+
+void List::resize() {
+    int newCapacity = (capacity == 0) ? 1 : capacity * 2;
+    char* newA = new char[newCapacity];
+    int* newB = new int[newCapacity];
+
+    for (int i = 0; i < capacity; i++) {
+        newA[i] = A[i];
+        newB[i] = B[i];
+    }
+
+    delete[] A;
+    delete[] B;
+
+    A = newA;
+    B = newB;
+    capacity = newCapacity;
+}
+
+void List::createList(char value) {
+    if (nz != -1) {
+        std::cout << "Список уже создан!\n";
+        return;
+    }
+
+    if (capacity == 0) {
+        resize();
+    }
+
+    A[ns] = value;
+    B[ns] = -1;
+    nz = ns++;
+}
+
+void List::append(char value) {
+    if (nz == -1) {
+        std::cout << "Список не был создан. Создаём автоматически...\n";
+        createList(value);
+        return;
+    }
+
+    if (ns >= capacity) {
+        resize();
+    }
+
+    int temp = nz;
+    while (B[temp] != -1) temp = B[temp];
+
+    A[ns] = value;
+    B[temp] = ns;
+    B[ns++] = -1;
+}
+
+int* List::findElement(char value, int& count) {
+    int* positions = new int[capacity];
+    count = 0;
+
+    int temp = nz;
+    int index = 0;
+
+    while (temp != -1) {
+        if (A[temp] == value) {
+            positions[count++] = index;
+        }
+        temp = B[temp];
+        index++;
+    }
+
+    if (count == 0) {
+        delete[] positions;
+        return nullptr;
+    }
+
+    return positions;
+}
+
+void List::insertAtIndex(int index, char value) {
+    if (nz == -1) {
+        std::cout << "Список не был создан. Создаём автоматически...\n";
+        createList(value);
+        return;
+    }
+
+    if (index < 0 || index > countElements()) {
+        std::cout << "Неверная позиция!\n";
+        return;
+    }
+
+    if (ns >= capacity) {
+        resize();
+    }
+
+    if (index == 0) {
+        A[ns] = value;
+        B[ns] = nz;
+        nz = ns++;
+        return;
+    }
+
+    int temp = nz;
+    for (int i = 0; i < index - 1; i++) {
+        temp = B[temp];
+    }
+
+    A[ns] = value;
+    B[ns] = B[temp];
+    B[temp] = ns++;
+}
+
+void List::deleteByIndex(int index) {
+    if (nz == -1 || index < 0 || index >= countElements()) {
+        std::cout << "Неверный индекс!\n";
+        return;
+    }
+
+    if (index == 0) {
+        nz = B[nz];
+        return;
+    }
+
+    int temp = nz, prev = -1;
+    for (int i = 0; i < index; i++) {
+        prev = temp;
+        temp = B[temp];
+    }
+
+    B[prev] = B[temp];
+}
+
+int List::countElements() {
+    int count = 0;
+    for (int temp = nz; temp != -1; temp = B[temp])
+        count++;
+    return count;
+}
+
+void List::printList() {
+    if (nz == -1) {
+        std::cout << "Список пуст!\n";
+        return;
+    }
+    std::cout << "Список: ";
+    int temp = nz;
+    while (temp != -1) {
+        cout << A[temp] << " ";
+        temp = B[temp];
+    }
+    cout << std::endl;
+}
+
+void List::fillRandom(int size) {
+    if (nz == -1) {
+        cout << "Список не был создан. Создаём автоматически...\n";
+        createList('a' + rand() % 26);
+        size--;
+    }
+
+    srand(time(0));
+    for (int i = 0; i < size; i++) {
+        append('a' + rand() % 26);
+    }
+}
+
+void List::createUniqueList() {
+    if (nz == -1) {
+        cout << "Список пуст!\n";
+        return;
+    }
+
+    int freq[256] = { 0 };
+
+    for (int temp = nz; temp != -1; temp = B[temp]) {
+        freq[(unsigned char)A[temp]]++;
+    }
+
+    char* newA = new char[capacity];
+    int* newB = new int[capacity];
+    int newNz = -1, newNs = 0;
+
+    for (int temp = nz; temp != -1; temp = B[temp]) {
+        if (freq[(unsigned char)A[temp]] == 1) {
+            if (newNz == -1) {
+                newA[newNs] = A[temp];
+                newB[newNs] = -1;
+                newNz = newNs++;
+            }
+            else {
+                newA[newNs] = A[temp];
+                newB[newNs - 1] = newNs;
+                newB[newNs] = -1;
+                newNs++;
+            }
+        }
+    }
+
+    if (newNz == -1) {
+        cout << "Уникальных элементов нет!\n";
+    }
+    else {
+        cout << "Список уникальных элементов: ";
+        int temp = newNz;
+        while (temp != -1) {
+            cout << newA[temp] << " ";
+            temp = newB[temp];
+        }
+        cout << endl;
+    }
+
+    delete[] newA;
+    delete[] newB;
+}
+cpp main:
+#include "list.h"
+
+void menu() {
+    List list;
+    int choice;
+    char value;
+    int position;
+
+    while (true) {
+        cout << "\nМеню:\n"
+            << "1. Начальное формирование списка\n"
+            << "2. Добавление элемента в список\n"
+            << "3. Нахождение заданного элемента\n"
+            << "4. Вставка элемента в список\n"
+            << "5. Удаление элемента из списка\n"
+            << "6. Определение количества узлов списка\n"
+            << "7. Чтение и вывод всех элементов списка\n"
+            << "8. Заполнить случайными элементами\n"
+            << "9. Создать список с уникальными элементами\n"
+            << "0. Выход\n"
+            << "Ваш выбор: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            cout << "Введите первый элемент: ";
+            cin >> value;
+            list.createList(value);
+            break;
+        case 2:
+            cout << "Введите элемент: ";
+            cin >> value;
+            list.append(value);
+            break;
+        case 3:
+            cout << "Введите элемент для поиска: ";
+            cin >> value;
+            {
+                int count = 0;
+                int* positions = list.findElement(value, count);
+                if (positions != nullptr) {
+                    cout << "Элемент найден на позициях: ";
+                    for (int i = 0; i < count; i++) {
+                        cout << positions[i] << " ";
+                    }
+                    cout << endl;
+                    delete[] positions;
+                }
+                else {
+                    cout << "Элемент не найден!\n";
+                }
+            }
+            break;
+        case 4:
+            cout << "Введите позицию для вставки: ";
+            cin >> position;
+            cout << "Введите элемент: ";
+            cin >> value;
+            list.insertAtIndex(position, value);
+            break;
+        case 5:
+            cout << "Введите индекс для удаления: ";
+            cin >> position;
+            list.deleteByIndex(position);
+            break;
+        case 6:
+            cout << "Количество элементов: " << list.countElements() << endl;
+            break;
+        case 7:
+            list.printList();
+            break;
+        case 8:
+            int size;
+            cout << "Введите количество элементов: ";
+            cin >> size;
+            list.fillRandom(size);
+            break;
+        case 9:
+            list.createUniqueList();
+            break;
+        case 0:
+            return;
+        default:
+            cout << "Неверный выбор!\n";
+        }
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "RUS");
+    menu();
+    return 0;
+}
