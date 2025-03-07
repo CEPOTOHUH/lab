@@ -1,0 +1,110 @@
+node.h:
+#pragma once
+
+struct Node {
+    double value;
+    Node* prev;
+    Node* next;
+};
+
+list.h:
+#pragma once
+
+#include "node.h"
+
+struct List {
+    Node* head;
+    Node* tail;
+
+    List();
+    ~List();
+
+    void append(double value);
+    double calculateSum();
+    void clear();
+};
+
+cpp:
+#include "list.h"
+#include <iostream>
+
+List::List() : head(nullptr), tail(nullptr) {}
+
+List::~List() {
+    clear();
+}
+
+void List::append(double value) {
+    Node* newNode = new Node{ value, nullptr, nullptr };
+    if (head == nullptr) {
+        tail = newNode;
+        head = tail;
+    }
+    else {
+        tail->next = newNode;
+        newNode->prev = tail;
+        tail = newNode;
+    }
+}
+
+double List::calculateSum() {
+    if (!head) return 0; // Если список пуст, возвращаем 0
+
+    Node* left = head;  // Указатель на начало списка
+    Node* right = tail; // Указатель на конец списка
+    double product = 1; // Инициализируем произведение единицей
+
+    // Проходим по списку, пока левый и правый указатели не встретятся
+    while (left != right && left->prev != right) {
+        product *= (left->value + right->value); // Умножаем на сумму пары
+        left = left->next;  // Перемещаем левый указатель вперед
+        right = right->prev; // Перемещаем правый указатель назад
+    }
+
+    // Если количество элементов нечетное, добавляем средний элемент
+    if (left == right) {
+        product *= left->value;
+    }
+
+    // Добавляем последнюю пару (x_n + x_1)
+    product *= (head->value + tail->value);
+
+    return product;
+}
+
+void List::clear() {
+    Node* temp;
+    while (head) {
+        temp = head;
+        head = head->next;
+        delete temp;
+    }
+    tail = nullptr;
+}
+cpp main:
+#include "list.h"
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    setlocale(LC_ALL, "RUS");
+    int n;
+    cout << "Введите количество чисел (n): ";
+    cin >> n;
+
+    List list;
+    double value;
+
+    cout << "Введите " << n << " чисел: ";
+    for (int i = 0; i < n; i++) {
+        cin >> value;
+        list.append(value);
+    }
+
+    double result = list.calculateSum();
+    cout << "Результат: " << result << endl;
+
+    list.clear();
+    return 0;
+}
