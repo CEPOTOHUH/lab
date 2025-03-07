@@ -1,0 +1,91 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+struct Node {
+    int value;
+    Node* left;
+    Node* right;
+
+    Node(int val) {
+        value = val;
+        left = right = nullptr;
+    }
+};
+
+Node* insert(Node* root, int value) {
+    if (root == nullptr)
+        return new Node(value);
+
+    if (value < root->value)
+        root->left = insert(root->left, value);
+    else
+        root->right = insert(root->right, value);
+    return root;
+}
+
+int countLeaves(Node* root) {
+    if (root == nullptr) {
+        return 0; // Если дерево пустое, листьев нет
+    }
+
+    // Если у узла нет дочерних узлов, это лист
+    if (root->left == nullptr && root->right == nullptr) {
+        return 1;
+    }
+
+    // Рекурсивно считаем листья в левом и правом поддеревьях
+    return countLeaves(root->left) + countLeaves(root->right);
+}
+
+void print(Node* root) {
+    if (root) {
+        print(root->left);
+        cout << root->value << " ";
+        print(root->right);
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "RUS");
+    Node* root = nullptr;
+    int n, value, choice;
+
+    cout << "Выберите способ ввода (1-ручной, 2-рандомный): ";
+    cin >> choice;
+
+    cout << "Введите количество элементов: ";
+    cin >> n;
+
+    if (choice == 1) {
+        cout << "Введите " << n << " различных целых чисел:\n";
+        for (int i = 0; i < n; i++) {
+            cin >> value;
+            root = insert(root, value);
+        }
+    }
+    else if (choice == 2) {
+        srand(time(0)); // Инициализация генератора случайных чисел
+        cout << "Рандомные значения:\n";
+        for (int i = 0; i < n; i++) {
+            value = rand() % 100;
+            cout << value << " ";
+            root = insert(root, value);
+        }
+        cout << endl;
+    }
+    else {
+        cout << "Неверный выбор.\n";
+        return 1;
+    }
+
+    cout << "Бинарное дерево (в порядке возрастания): ";
+    print(root);
+    cout << endl;
+
+    cout << "Количество листьев: " << countLeaves(root) << endl;
+
+    return 0;
+}
