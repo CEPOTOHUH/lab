@@ -1,0 +1,233 @@
+#include <iostream>
+#include <fstream>
+
+using namespace std;
+
+const int MAX_NAME_LENGTH = 100;
+const int MIN_AGE = 16;
+const int MAX_AGE = 100;
+const int MIN_COURSE = 1;
+const int MAX_COURSE = 6;
+const float MIN_PERFORMANCE = 0.0f;
+const float MAX_PERFORMANCE = 10.0f;
+
+struct Student {
+    char name[MAX_NAME_LENGTH];
+    int age;
+    char gender;
+    int course;
+    float performance;
+
+    void print() const {
+        cout << "Имя: " << name << ", Возраст: " << age
+            << ", Пол: " << gender << ", Курс: " << course
+            << ", Успеваемость: " << performance << endl;
+    }
+};
+
+bool stringsEqual(const char* str1, const char* str2) {
+    int i = 0;
+    while (str1[i] != '\0' && str2[i] != '\0') {
+        if (str1[i] != str2[i]) return false;
+        i++;
+    }
+    return (str1[i] == '\0' && str2[i] == '\0');
+}
+
+int getIntInput(const char* prompt, int min, int max) {
+    int value;
+    bool inputValid = false;
+
+    while (!inputValid) {
+        cout << prompt;
+        cin >> value;
+
+        if (cin.fail() || value < min || value > max) {
+            cin.clear();
+            char c;
+            do { c = cin.get(); } while (c != '\n');
+            cout << "Ошибка! Введите число от " << min << " до " << max << ": ";
+        }
+        else {
+            cin.ignore();
+            inputValid = true;
+        }
+    }
+    return value;
+}
+
+float getFloatInput(const char* prompt, float min, float max) {
+    float value;
+    bool inputValid = false;
+
+    while (!inputValid) {
+        cout << prompt;
+        cin >> value;
+
+        if (cin.fail() || value < min || value > max) {
+            cin.clear();
+            char c;
+            do { c = cin.get(); } while (c != '\n');
+            cout << "Ошибка! Введите число от " << min << " до " << max << ": ";
+        }
+        else {
+            cin.ignore();
+            inputValid = true;
+        }
+    }
+    return value;
+}
+
+void addStudent(const char* filename) {
+    ofstream file(filename, ios::app); // Текстовый режим
+    if (!file) {
+        cerr << "Ошибка открытия файла!" << endl;
+        return;
+    }
+
+    Student newStudent;
+    cout << "\nДобавление нового студента:\n";
+
+    cout << "Введите имя: ";
+    cin.ignore();
+    cin.getline(newStudent.name, MAX_NAME_LENGTH);
+
+    newStudent.age = getIntInput("Введите возраст: ", MIN_AGE, MAX_AGE);
+    cout << "Введите пол (М/Ж): ";
+    cin >> newStudent.gender;
+    newStudent.course = getIntInput("Введите курс: ", MIN_COURSE, MAX_COURSE);
+    newStudent.performance = getFloatInput("Введите успеваемость: ", MIN_PERFORMANCE, MAX_PERFORMANCE);
+
+    // Запись в текстовом формате
+    file << newStudent.name << " "
+        << newStudent.age << " "
+        << newStudent.gender << " "
+        << newStudent.course << " "
+        << newStudent.performance << "\n";
+
+    file.close();
+    cout << "Студент добавлен!\n";
+}
+
+void deleteStudent(const char* filename) {
+    char studentName[MAX_NAME_LENGTH];
+    cout << "\nУдаление студента\nВведите имя студента: ";
+    cin.ignore();
+    cin.getline(studentName, MAX_NAME_LENGTH);
+
+    ifstream inFile(filename);
+    if (!inFile) {
+        cerr << "Ошибка открытия файла!" << endl;
+        return;
+    }
+
+    ofstream tempFile("temp.txt");
+    Student student;
+    bool found = false;
+
+    while (inFile >> student.name >> student.age >> student.gender >> student.course >> student.performance) {
+        if (!stringsEqual(student.name, studentName)) {
+            tempFile << student.name << " "
+                << student.age << " "
+                << student.gender << " "
+                << student.course << " "
+                << student.performance << "\n";
+        }
+        else {
+            found = true;
+        }
+    }
+
+    inFile.close();
+    tempFile.close();
+
+    if (found) {
+        remove(filename);
+        rename("temp.txt", filename);
+        cout << "Студент " << studentName << " удален!\n";
+    }
+    else {
+        remove("temp.txt");
+        cout << "Студент " << studentName << " не найден!\n";
+    }
+}
+
+void findStudent(const char* filename) {
+    char studentName[MAX_NAME_LENGTH];
+    cout << "\nПоиск студента\nВведите имя студента: ";
+    cin.ignore();
+    cin.getline(studentName, MAX_NAME_LENGTH);
+
+    ifstream file(filename);
+    if (!file) {
+        cerr << "Ошибка открытия файла!" << endl;
+        return;
+    }
+
+    Student student;
+    bool found = false;
+
+    while (file >> student.name >> student.age >> student.gender >> student.course >> student.performance) {
+        if (stringsEqual(student.name, studentName)) {
+            cout << "\nНайден студент:\n";
+            student.print();
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) cout << "Студент " << studentName << " не найден!\n";
+    file.close();
+}
+
+void showAllStudents(const char* filename) {
+    ifstream file(filename);
+    if (!file) {
+        cerr << "Ошибка открытия файла!" << endl;
+        return;
+    }
+
+    cout << "\nСписок всех студентов:\n";
+    Student student;
+    while (file >> student.name >> student.age >> student.gender >> student.course >> student.performance) {
+        student.print();
+    }
+    file.close();
+}
+
+void showMenu() {
+    cout << "\nМеню управления студентами:\n";
+    cout << "1. Добавить студента\n";
+    cout << "2. Удалить студента\n";
+    cout << "3. Найти студента\n";
+    cout << "4. Показать всех студентов\n";
+    cout << "5. Выход\n";
+    cout << "Выберите действие: ";
+}
+
+int main() {
+    setlocale(LC_ALL, "rus");
+    const char* filename = "students.txt";
+
+    int choice;
+    do {
+        showMenu();
+        while (!(cin >> choice) || choice < 1 || choice > 5) {
+            cin.clear();
+            char c;
+            do { c = cin.get(); } while (c != '\n');
+            cout << "Неверный ввод! Введите число от 1 до 5: ";
+        }
+        cin.ignore();
+
+        switch (choice) {
+        case 1: addStudent(filename); break;
+        case 2: deleteStudent(filename); break;
+        case 3: findStudent(filename); break;
+        case 4: showAllStudents(filename); break;
+        case 5: cout << "Выход из программы...\n"; break;
+        }
+    } while (choice != 5);
+
+    return 0;
+}
