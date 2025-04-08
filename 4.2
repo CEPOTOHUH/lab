@@ -1,0 +1,151 @@
+//LinearList.h
+#pragma once
+#include <iostream>
+using namespace std;
+template <typename T>
+class LinearList {
+private:
+    struct Node {
+        T data;
+        Node* next;
+        Node(const T& value);
+    };
+
+    Node* head;
+    size_t size;
+
+public:
+    LinearList();
+    ~LinearList();
+
+    void add(const T& value);
+    bool contains(const T& value) const;
+    void print() const;
+    void clear();
+    Node* getHead() const;
+};
+
+template <typename T>
+LinearList<T> intersection(const LinearList<T>& L1, const LinearList<T>& L2);
+
+// Явное инстанцирование для char
+extern template class LinearList<char>;
+
+
+
+
+//cpp
+#include "LinearList.h"
+
+// Реализация методов шаблонного класса
+template <typename T>
+LinearList<T>::Node::Node(const T& value) : data(value), next(nullptr) {}
+
+template <typename T>
+LinearList<T>::LinearList() : head(nullptr), size(0) {}
+
+template <typename T>
+LinearList<T>::~LinearList() { clear(); }
+
+template <typename T>
+void LinearList<T>::add(const T& value) {
+    if (!head) {
+        head = new Node(value);
+    }
+    else {
+        Node* temp = head;
+        while (temp->next) {
+            temp = temp->next;
+        }
+        temp->next = new Node(value);
+    }
+    size++;
+}
+
+template <typename T>
+bool LinearList<T>::contains(const T& value) const {
+    Node* temp = head;
+    while (temp) {
+        if (temp->data == value) {
+            return true;
+        }
+        temp = temp->next;
+    }
+    return false;
+}
+
+template <typename T>
+void LinearList<T>::print() const {
+    Node* temp = head;
+    while (temp) {
+        cout << temp->data << " ";
+        temp = temp->next;
+    }
+    cout << endl;
+}
+
+template <typename T>
+void LinearList<T>::clear() {
+    while (head) {
+        Node* toDelete = head;
+        head = head->next;
+        delete toDelete;
+    }
+    size = 0;
+}
+
+template <typename T>
+typename LinearList<T>::Node* LinearList<T>::getHead() const {
+    return head;
+}
+
+template <typename T>
+LinearList<T> intersection(const LinearList<T>& L1, const LinearList<T>& L2) {
+    LinearList<T> result;
+    auto* temp = L1.getHead();
+    while (temp) {
+        if (L2.contains(temp->data) && !result.contains(temp->data)) {
+            result.add(temp->data);
+        }
+        temp = temp->next;
+    }
+    return result;
+}
+
+// Явное инстанцирование шаблона для char
+template class LinearList<char>;
+template LinearList<char> intersection(const LinearList<char>&, const LinearList<char>&);
+
+
+
+//main
+#include "LinearList.h"
+void inputList(LinearList<char>& list, const string& name) {
+    cout << "Введите символы для списка " << name << " (введите '.' для завершения):\n";
+    char ch;
+    while (true) {
+        std::cin >> ch;
+        if (ch == '.') break;
+        list.add(ch);
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "ru");
+    LinearList<char> L1, L2;
+
+    inputList(L1, "L1");
+    inputList(L2, "L2");
+
+    cout << "\nСписок L1: ";
+    L1.print();
+    cout << "Список L2: ";
+    L2.print();
+
+    LinearList<char> L = intersection(L1, L2);
+    cout << "Пересечение L1 и L2: ";
+    L.print();
+
+    return 0;
+}
+
