@@ -1,0 +1,256 @@
+//vecctor.h
+
+#include <iostream>
+#include <stdexcept>
+
+using namespace std;
+
+class Vector {
+private:
+    int* data;
+    size_t size;
+    size_t capacity;
+
+    void resizeIfNeeded();
+
+public:
+    Vector();
+    Vector(size_t initial_size, int value = 0);
+    Vector(const Vector& other);
+    Vector(Vector&& other) noexcept;
+    ~Vector();
+
+    Vector& operator=(const Vector& other);
+    Vector& operator=(Vector&& other) noexcept;
+    int& operator[](size_t index);
+    const int& operator[](size_t index) const;
+
+    size_t getSize() const;
+    size_t getCapacity() const;
+    void pushBack(int value);
+    void fillRandom(size_t count, int maxValue);
+    void clear();
+
+    friend ostream& operator<<(ostream& os, const Vector& vec);
+};
+
+
+
+
+
+
+//cpp
+#include "Vector.h"
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+Vector::Vector() : data(nullptr), size(0), capacity(0) {}
+
+Vector::Vector(size_t initial_size, int value) : data(nullptr), size(0), capacity(0) {
+    if (initial_size > 0) {
+        capacity = initial_size;
+        data = new int[capacity];
+        size = initial_size;
+        for (size_t i = 0; i < size; ++i) {
+            data[i] = value;
+        }
+    }
+}
+
+Vector::Vector(const Vector& other) : data(new int[other.capacity]), size(other.size), capacity(other.capacity) {
+    for (size_t i = 0; i < size; ++i) {
+        data[i] = other.data[i];
+    }
+}
+
+Vector::Vector(Vector&& other) noexcept : data(other.data), size(other.size), capacity(other.capacity) {
+    other.data = nullptr;
+    other.size = 0;
+    other.capacity = 0;
+}
+
+Vector::~Vector() {
+    delete[] data;
+}
+
+Vector& Vector::operator=(const Vector& other) {
+    if (this != &other) {
+        delete[] data;
+        size = other.size;
+        capacity = other.capacity;
+        data = new int[capacity];
+        for (size_t i = 0; i < size; ++i) {
+            data[i] = other.data[i];
+        }
+    }
+    return *this;
+}
+
+Vector& Vector::operator=(Vector&& other) noexcept {
+    if (this != &other) {
+        delete[] data;
+        data = other.data;
+        size = other.size;
+        capacity = other.capacity;
+        other.data = nullptr;
+        other.size = 0;
+        other.capacity = 0;
+    }
+    return *this;
+}
+
+int& Vector::operator[](size_t index) {
+    if (index >= size) throw out_of_range("Index out of range");
+    return data[index];
+}
+
+const int& Vector::operator[](size_t index) const {
+    if (index >= size) throw out_of_range("Index out of range");
+    return data[index];
+}
+
+size_t Vector::getSize() const { return size; }
+size_t Vector::getCapacity() const { return capacity; }
+
+void Vector::pushBack(int value) {
+    resizeIfNeeded();
+    data[size++] = value;
+}
+
+void Vector::resizeIfNeeded() {
+    if (size >= capacity) {
+        size_t new_capacity = (capacity == 0) ? 1 : capacity * 2;
+        int* new_data = new int[new_capacity];
+        for (size_t i = 0; i < size; ++i) {
+            new_data[i] = data[i];
+        }
+        delete[] data;
+        data = new_data;
+        capacity = new_capacity;
+    }
+}
+
+void Vector::fillRandom(size_t count, int maxValue) {
+    srand(static_cast<unsigned>(time(0)));
+    for (size_t i = 0; i < count; ++i) {
+        pushBack(rand() % maxValue + 1);
+    }
+}
+
+void Vector::clear() {
+    delete[] data;
+    data = nullptr;
+    size = 0;
+    capacity = 0;
+}
+
+ostream& operator<<(ostream& os, const Vector& vec) {
+    for (size_t i = 0; i < vec.size; ++i) {
+        os << vec.data[i] << " ";
+    }
+    return os;
+}
+
+
+
+
+
+
+
+//main
+#include "Vector.h"
+#include <iostream>
+#include <random>
+
+using namespace std;
+
+const int MAX_VALUE = 10000000;
+
+void processManualInput(Vector& count, Vector& result) {
+    int count_input;
+    cout << "Введите количество чисел: ";
+    cin >> count_input;
+
+    cout << "Введите последовательность чисел:\n";
+    for (int i = 0; i < count_input; ++i) {
+        int num;
+        cin >> num;
+        if (num > 0 && num <= MAX_VALUE) {
+            count[num]++;
+            if (count[num] == 2) {
+                result.pushBack(num);
+            }
+        }
+        else {
+            cout << "Число " << num << " выходит за пределы допустимых значений.\n";
+        }
+    }
+}
+
+void processRandomGeneration(Vector& count, Vector& result) {
+    long long n;
+    cout << "Введите количество чисел (до 10^12): ";
+    cin >> n;
+
+    if (n > 1e12) {
+        cout << "Ошибка: слишком большое количество чисел!\n";
+        return;
+    }
+
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<int> dist(1, MAX_VALUE);
+
+    cout << "Генерация случайной последовательности...\n";
+
+    for (long long i = 0; i < n; i++) {
+        int num = dist(gen);
+        count[num]++;
+        if (count[num] == 2) {
+            result.pushBack(num);
+        }
+    }
+}
+
+void bubbleSort(Vector& vec) {
+    for (size_t i = 0; i < vec.getSize() - 1; i++) {
+        for (size_t j = 0; j < vec.getSize() - i - 1; j++) {
+            if (vec[j] > vec[j + 1]) {
+                int temp = vec[j];
+                vec[j] = vec[j + 1];
+                vec[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+
+    Vector count(MAX_VALUE + 1, 0);
+    Vector result;
+
+    int mode;
+    cout << "Выберите режим: (1 - ручной ввод, 2 - случайная генерация): ";
+    cin >> mode;
+
+    if (mode == 1) {
+        processManualInput(count, result);
+    }
+    else if (mode == 2) {
+        processRandomGeneration(count, result);
+    }
+    else {
+        cout << "Неверный режим работы\n";
+        return 1;
+    }
+
+    bubbleSort(result);
+
+    cout << "Числа, встречающиеся более одного раза (по возрастанию):\n";
+    cout << result << endl;
+
+    return 0;
+}
