@@ -1,0 +1,245 @@
+//string.h
+#include <iostream>
+using namespace std;
+
+class String {
+private:
+    char* data;
+    size_t length;
+
+public:
+    // Конструкторы
+    String();                           // Конструктор по умолчанию
+    String(const char* str);           // Конструктор с параметром
+    String(const String& other);       // Конструктор копирования
+    String(String&& other) noexcept;   // Конструктор перемещения
+
+    // Деструктор
+    ~String();
+
+    // Операторы присваивания
+    String& operator=(const String& other);  // Копирующее присваивание
+    String& operator=(String&& other) noexcept; // Перемещающее присваивание
+
+    // Методы
+    size_t getLength() const;
+    const char* c_str() const;
+
+    // Операции ввода/вывода
+    friend ostream& operator<<(ostream& os, const String& str);
+    friend istream& operator>>(istream& is, String& str);
+
+    // Операции со строками
+    void insertChar(char c, size_t pos);         // Вставка символа
+    void trimLeadingSpaces();                    // Удаление ведущих пробелов
+    void addMissingChars(const String& other);   // Добавление отсутствующих символов
+
+private:
+    void resize(size_t newLength);
+};
+
+
+
+
+
+
+
+
+//cpp
+#include "String.h"
+#include <cstring>
+
+// Конструктор по умолчанию
+String::String() : data(nullptr), length(0) {}
+
+// Конструктор с параметром
+String::String(const char* str) {
+    if (str) {
+        length = strlen(str);
+        data = new char[length + 1];
+        strcpy(data, str);
+    }
+    else {
+        data = nullptr;
+        length = 0;
+    }
+}
+
+// Конструктор копирования
+String::String(const String& other) {
+    length = other.length;
+    if (other.data) {
+        data = new char[length + 1];
+        strcpy(data, other.data);
+    }
+    else {
+        data = nullptr;
+    }
+}
+
+// Конструктор перемещения
+String::String(String&& other) noexcept
+    : data(other.data), length(other.length) {
+    other.data = nullptr;
+    other.length = 0;
+}
+
+// Деструктор
+String::~String() {
+    delete[] data;
+}
+
+// Копирующее присваивание
+String& String::operator=(const String& other) {
+    if (this != &other) {
+        delete[] data;
+        length = other.length;
+        if (other.data) {
+            data = new char[length + 1];
+            strcpy(data, other.data);
+        }
+        else {
+            data = nullptr;
+        }
+    }
+    return *this;
+}
+
+// Перемещающее присваивание
+String& String::operator=(String&& other) noexcept {
+    if (this != &other) {
+        delete[] data;
+        data = other.data;
+        length = other.length;
+        other.data = nullptr;
+        other.length = 0;
+    }
+    return *this;
+}
+
+// Получение длины строки
+size_t String::getLength() const {
+    return length;
+}
+
+// Получение C-style строки
+const char* String::c_str() const {
+    return data ? data : "";
+}
+
+// Оператор вывода
+ostream& operator<<(ostream& os, const String& str) {
+    os << (str.data ? str.data : "");
+    return os;
+}
+
+// Оператор ввода
+istream& operator>>(istream& is, String& str) {
+    char buffer[1024];
+    is.getline(buffer, sizeof(buffer));
+    str = String(buffer);
+    return is;
+}
+
+// Вставка символа в позицию
+void String::insertChar(char c, size_t pos) {
+    if (pos > length) pos = length; // Если позиция больше длины, вставляем в конец
+
+    resize(length + 1);
+    for (size_t i = length; i > pos; --i) {
+        data[i] = data[i - 1];
+    }
+    data[pos] = c;
+    length++;
+}
+
+// Удаление ведущих пробелов
+void String::trimLeadingSpaces() {
+    if (!data) return;
+
+    size_t leadingSpaces = 0;
+    while (leadingSpaces < length && data[leadingSpaces] == ' ') {
+        leadingSpaces++;
+    }
+
+    if (leadingSpaces > 0) {
+        size_t newLength = length - leadingSpaces;
+        char* newData = new char[newLength + 1];
+        strcpy(newData, data + leadingSpaces);
+        delete[] data;
+        data = newData;
+        length = newLength;
+    }
+}
+
+// Добавление отсутствующих символов из другой строки
+void String::addMissingChars(const String& other) {
+    if (!other.data) return;
+
+    size_t maxLen = (length > other.length) ? length : other.length;
+    for (size_t i = 0; i < maxLen; ++i) {
+        if (i >= length) {
+            insertChar(other.data[i], i);
+        }
+        else if (i < other.length && data[i] != other.data[i]) {
+            data[i] = other.data[i];
+        }
+    }
+}
+
+// Изменение размера строки
+void String::resize(size_t newLength) {
+    char* newData = new char[newLength + 1];
+    if (data) {
+        strncpy(newData, data, length);
+        delete[] data;
+    }
+    data = newData;
+    length = newLength;
+    data[length] = '\0';
+}
+
+
+
+
+
+
+
+//main
+#include "String.h"
+#include <iostream>
+using namespace std;
+
+int main() {
+    // Ввод первой строки
+    String s1;
+    cout << "Введите первую строку: ";
+    cin >> s1;
+
+    // Ввод символа и позиции для вставки
+    char ch;
+    size_t pos;
+    cout << "Введите символ для вставки: ";
+    cin >> ch;
+    cout << "Введите позицию для вставки: ";
+    cin >> pos;
+
+    // Вставка символа
+    s1.insertChar(ch, pos);
+    cout << "Строка после вставки: " << s1 << endl;
+
+    // Удаление ведущих пробелов
+    s1.trimLeadingSpaces();
+    cout << "Строка после удаления пробелов: '" << s1 << "'" << endl;
+
+    // Ввод второй строки для добавления отсутствующих символов
+    String s2;
+    cout << "Введите вторую строку для добавления символов: ";
+    cin >> s2;
+
+    // Добавление отсутствующих символов
+    s1.addMissingChars(s2);
+    cout << "Результат добавления символов: " << s1 << endl;
+
+    return 0;
+}
