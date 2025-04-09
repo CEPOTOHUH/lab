@@ -1,7 +1,4 @@
-//LinearList.h
-#pragma once
-#include <iostream>
-using namespace std;
+// LinearList
 template <typename T>
 class LinearList {
 private:
@@ -14,21 +11,35 @@ private:
     Node* head;
     size_t size;
 
-public:
-    LinearList();
-    ~LinearList();
+    void copyFrom(const LinearList& other); // Вспомогательный метод для копирования
 
+public:
+    // Конструкторы
+    LinearList();                          // Конструктор по умолчанию
+    LinearList(const LinearList& other);    // Конструктор копирования
+    LinearList(LinearList&& other) noexcept; // Конструктор перемещения
+    ~LinearList();                         // Деструктор
+
+    // Операторы
+    LinearList& operator=(const LinearList& other); // Оператор копирования
+    LinearList& operator=(LinearList&& other) noexcept; // Оператор перемещения
+
+    // Основные методы
+    void initFirst(const T& value);
     void add(const T& value);
+    bool remove(const T& value);
     bool contains(const T& value) const;
     void print() const;
     void clear();
+
+    // Вспомогательные методы
     Node* getHead() const;
+    size_t getSize() const;
 };
 
 template <typename T>
 LinearList<T> intersection(const LinearList<T>& L1, const LinearList<T>& L2);
 
-// Явное инстанцирование для char
 extern template class LinearList<char>;
 
 
@@ -36,8 +47,8 @@ extern template class LinearList<char>;
 
 //cpp
 #include "LinearList.h"
+#include <iostream>
 
-// Реализация методов шаблонного класса
 template <typename T>
 LinearList<T>::Node::Node(const T& value) : data(value), next(nullptr) {}
 
@@ -48,9 +59,17 @@ template <typename T>
 LinearList<T>::~LinearList() { clear(); }
 
 template <typename T>
-void LinearList<T>::add(const T& value) {
+void LinearList<T>::initFirst(const T& value) {
     if (!head) {
         head = new Node(value);
+        size = 1;
+    }
+}
+
+template <typename T>
+void LinearList<T>::add(const T& value) {
+    if (!head) {
+        initFirst(value);
     }
     else {
         Node* temp = head;
@@ -58,8 +77,36 @@ void LinearList<T>::add(const T& value) {
             temp = temp->next;
         }
         temp->next = new Node(value);
+        size++;
     }
-    size++;
+}
+
+template <typename T>
+bool LinearList<T>::remove(const T& value) {
+    if (!head) return false;
+
+    if (head->data == value) {
+        Node* toDelete = head;
+        head = head->next;
+        delete toDelete;
+        size--;
+        return true;
+    }
+
+    Node* current = head;
+    while (current->next && current->next->data != value) {
+        current = current->next;
+    }
+
+    if (current->next) {
+        Node* toDelete = current->next;
+        current->next = current->next->next;
+        delete toDelete;
+        size--;
+        return true;
+    }
+
+    return false;
 }
 
 template <typename T>
@@ -78,10 +125,10 @@ template <typename T>
 void LinearList<T>::print() const {
     Node* temp = head;
     while (temp) {
-        cout << temp->data << " ";
+        std::cout << temp->data << " ";
         temp = temp->next;
     }
-    cout << endl;
+    std::cout << std::endl;
 }
 
 template <typename T>
@@ -100,6 +147,11 @@ typename LinearList<T>::Node* LinearList<T>::getHead() const {
 }
 
 template <typename T>
+size_t LinearList<T>::getSize() const {
+    return size;
+}
+
+template <typename T>
 LinearList<T> intersection(const LinearList<T>& L1, const LinearList<T>& L2) {
     LinearList<T> result;
     auto* temp = L1.getHead();
@@ -112,40 +164,179 @@ LinearList<T> intersection(const LinearList<T>& L1, const LinearList<T>& L2) {
     return result;
 }
 
-// Явное инстанцирование шаблона для char
 template class LinearList<char>;
 template LinearList<char> intersection(const LinearList<char>&, const LinearList<char>&);
 
+// Правило пяти:
+
+// 1. Конструктор копирования
+template <typename T>
+LinearList<T>::LinearList(const LinearList& other) : head(nullptr), size(0) {
+    copyFrom(other);
+}
+
+// 2. Оператор копирования
+template <typename T>
+LinearList<T>& LinearList<T>::operator=(const LinearList& other) {
+    if (this != &other) {
+        clear();
+        copyFrom(other);
+    }
+    return *this;
+}
+
+// 3. Конструктор перемещения
+template <typename T>
+LinearList<T>::LinearList(LinearList&& other) noexcept
+    : head(other.head), size(other.size) {
+    other.head = nullptr;
+    other.size = 0;
+}
+
+// 4. Оператор перемещения
+template <typename T>
+LinearList<T>& LinearList<T>::operator=(LinearList&& other) noexcept {
+    if (this != &other) {
+        clear();
+        head = other.head;
+        size = other.size;
+        other.head = nullptr;
+        other.size = 0;
+    }
+    return *this;
+}
 
 
+// Вспомогательный метод для копирования
+template <typename T>
+void LinearList<T>::copyFrom(const LinearList& other) {
+    Node* temp = other.head;
+    while (temp) {
+        add(temp->data);
+        temp = temp->next;
+    }
+}
 //main
 #include "LinearList.h"
-void inputList(LinearList<char>& list, const string& name) {
-    cout << "Введите символы для списка " << name << " (введите '.' для завершения):\n";
-    char ch;
-    while (true) {
-        std::cin >> ch;
-        if (ch == '.') break;
-        list.add(ch);
+#include <iostream>
+
+void printMenu() {
+    std::cout << "\nМеню:\n"
+        << "1. Добавить элемент\n"
+        << "2. Удалить элемент\n"
+        << "3. Поиск элемента\n"
+        << "4. Вывести список\n"
+        << "5. Очистить список\n"
+        << "6. Демонстрация правила пяти\n"
+        << "7. Найти пересечение с другим списком\n"
+        << "0. Выход\n"
+        << "Выберите действие: ";
+}
+
+void handleAdd(LinearList<char>& list) {
+    char value;
+    std::cout << "Введите символ для добавления: ";
+    std::cin >> value;
+    list.add(value);
+    std::cout << "Элемент '" << value << "' добавлен.\n";
+}
+
+void handleRemove(LinearList<char>& list) {
+    char value;
+    std::cout << "Введите символ для удаления: ";
+    std::cin >> value;
+    if (list.remove(value)) {
+        std::cout << "Элемент '" << value << "' удален.\n";
     }
+    else {
+        std::cout << "Элемент не найден.\n";
+    }
+}
+
+void handleSearch(const LinearList<char>& list) {
+    char value;
+    std::cout << "Введите символ для поиска: ";
+    std::cin >> value;
+    std::cout << "Элемент '" << value << "' "
+        << (list.contains(value) ? "найден" : "не найден") << ".\n";
+}
+
+void handleIntersection(LinearList<char>& list) {
+    LinearList<char> otherList;
+    char value;
+    std::cout << "Введите элементы второго списка (через пробел, . для окончания):\n";
+    while (std::cin >> value && value != '.') {
+        otherList.add(value);
+    }
+
+    LinearList<char> result = intersection(list, otherList);
+    std::cout << "Пересечение списков: ";
+    result.print();
+}
+
+void demonstrateRuleOfFive() {
+    std::cout << "\n=== Демонстрация правила пяти ===\n";
+
+    LinearList<char> original;
+    original.add('A');
+    original.add('B');
+    original.add('C');
+
+    // 1. Конструктор копирования
+    LinearList<char> copyConstructed(original);
+    std::cout << "Копия (конструктор): ";
+    copyConstructed.print();
+
+    // 2. Оператор копирования
+    LinearList<char> copyAssigned;
+    copyAssigned = original;
+    std::cout << "Копия (оператор): ";
+    copyAssigned.print();
+
+    // 3. Конструктор перемещения
+    LinearList<char> moveConstructed(std::move(original));
+    std::cout << "После перемещения (конструктор): ";
+    moveConstructed.print();
+    std::cout << "Оригинал теперь: ";
+    original.print(); 
+
+    // 4. Оператор перемещения
+    LinearList<char> moveAssigned;
+    moveAssigned = std::move(moveConstructed);
+    std::cout << "После перемещения (оператор): ";
+    moveAssigned.print();
+    std::cout << "Источник теперь: ";
+    moveConstructed.print(); 
 }
 
 int main() {
     setlocale(LC_ALL, "ru");
-    LinearList<char> L1, L2;
+    LinearList<char> list;
+    int choice;
 
-    inputList(L1, "L1");
-    inputList(L2, "L2");
+    // Инициализация первого элемента
+    char firstValue;
+    std::cout << "Введите первый элемент списка: ";
+    std::cin >> firstValue;
+    list.initFirst(firstValue);
 
-    cout << "\nСписок L1: ";
-    L1.print();
-    cout << "Список L2: ";
-    L2.print();
+    do {
+        printMenu();
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    LinearList<char> L = intersection(L1, L2);
-    cout << "Пересечение L1 и L2: ";
-    L.print();
+        switch (choice) {
+        case 1: handleAdd(list); break;
+        case 2: handleRemove(list); break;
+        case 3: handleSearch(list); break;
+        case 4: std::cout << "Список: "; list.print(); break;
+        case 5: list.clear(); std::cout << "Список очищен.\n"; break;
+        case 6: demonstrateRuleOfFive(); break;
+        case 7: handleIntersection(list); break;
+        case 0: std::cout << "Выход...\n"; break;
+        default: std::cout << "Неверный выбор!\n";
+        }
+    } while (choice != 0);
 
     return 0;
 }
-
