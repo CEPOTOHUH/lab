@@ -1,0 +1,148 @@
+//product_calculator
+#pragma once
+#include "DoublyLinkedList.h"
+
+template <typename T>
+bool calculateProduct(const DoublyLinkedList<T>& list, T& result) {
+    size_t size = list.getSize();
+    if (size == 0 || size % 2 != 0) return false;
+
+    size_t n = size / 2;
+    result = 1;
+    T a1, a2;
+
+    for (size_t i = 0; i < n; ++i) {
+        if (!list.get(n - 1 - i, a1) || !list.get(n + i, a2)) {
+            return false;
+        }
+        result *= (a1 - a2);
+    }
+    return true;
+}
+
+
+
+
+
+//DoublyLinkedList
+#pragma once
+#include <iostream>
+
+template <typename T>
+class DoublyLinkedList {
+private:
+    struct Node {
+        T data;
+        Node* prev;
+        Node* next;
+
+        Node(const T& value) : data(value), prev(nullptr), next(nullptr) {}
+    };
+
+    Node* head;
+    Node* tail;
+    size_t size;
+
+public:
+    // Конструктор по умолчанию
+    DoublyLinkedList() : head(nullptr), tail(nullptr), size(0) {}
+
+    // Деструктор
+    ~DoublyLinkedList() {
+        clear();
+    }
+
+    // Добавление элемента в конец
+    void append(const T& value) {
+        Node* newNode = new Node(value);
+        if (!tail) {
+            head = tail = newNode;
+        }
+        else {
+            tail->next = newNode;
+            newNode->prev = tail;
+            tail = newNode;
+        }
+        size++;
+    }
+
+    // Вывод списка
+    void display() const {
+        Node* current = head;
+        while (current) {
+            std::cout << current->data << " ";
+            current = current->next;
+        }
+        std::cout << std::endl;
+    }
+
+    // Очистка списка
+    void clear() {
+        while (head) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+        }
+        tail = nullptr;
+        size = 0;
+    }
+
+    // Получение размера
+    size_t getSize() const { return size; }
+
+    // Получение элемента по индексу (без исключений)
+    bool get(size_t index, T& value) const {
+        if (index >= size) return false;
+
+        Node* current = head;
+        for (size_t i = 0; i < index; ++i) {
+            current = current->next;
+        }
+        value = current->data;
+        return true;
+    }
+};
+
+
+
+
+
+//main
+#include <iostream>
+#include "DoublyLinkedList.h"
+#include "product_calculator.h"
+
+int main() {
+    DoublyLinkedList<double> list;
+    int n;
+
+    std::cout << "Enter number of elements (must be even): ";
+    std::cin >> n;
+
+    if (n <= 0 || n % 2 != 0) {
+        std::cout << "Number of elements must be positive and even!\n";
+        return 1;
+    }
+
+    std::cout << "Enter " << n << " real numbers:\n";
+    for (int i = 0; i < n; ++i) {
+        double value;
+        std::cout << "a[" << i + 1 << "] = ";
+        std::cin >> value;
+        list.append(value);
+    }
+
+    std::cout << "\nEntered list: ";
+    list.display();
+
+    double result;
+    if (calculateProduct(list, result)) {
+        std::cout << "Calculation result: " << result << std::endl;
+    }
+    else {
+        std::cerr << "Error: Invalid list size or index out of range\n";
+        return 1;
+    }
+
+    return 0;
+}
